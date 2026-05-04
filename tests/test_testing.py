@@ -3,7 +3,6 @@ import asyncio
 from agent_dashboard import DashboardActionRef, DashboardHighlight, DashboardScreen
 from agent_dashboard.testing import ScreenChangeSummary, hub_context, make_screen, screen_diff
 
-
 # --- make_screen ---
 
 

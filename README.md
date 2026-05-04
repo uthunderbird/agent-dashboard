@@ -92,6 +92,17 @@ All names below are importable directly from `agent_dashboard`.
 | `screen_from_dict(data)` | Deserialize from dict; ignores unknown fields |
 | `SeverityLevel`, `StatusValue`, `ViewState` | Literal type aliases — document convention, no enforcement |
 
+### Two action lists
+
+`DashboardScreen` has two action fields:
+
+- **`screen_actions`** — rendered into the plain-text prompt by `render_screen()` under `Screen actions:`. The agent reads these and names one in its structured response.
+- **`tool_calls`** — *not* rendered into the prompt. Pass these out-of-band to your model API as native function/tool definitions (e.g. `tools=` in the Anthropic or OpenAI SDK). Both fields hold `DashboardActionRef`; the split is about which rendering channel carries the action, not about severity or approval.
+
+### view_state
+
+`view_state` defaults to `"collapsed"` and appears in the rendered output as `View state: collapsed`. The value `"expanded"` is reserved — you can set it explicitly on a screen, and the renderer will emit `View state: expanded`, but the library does not currently change rendering behaviour based on this field. Future renderer versions may use it to control whether body lines are shown.
+
 ## ScreenHub — async reactive streaming
 
 `ScreenHub` lets you publish screens from any thread and subscribe to them

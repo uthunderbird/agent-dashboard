@@ -7,7 +7,6 @@ Tests for ADR-0001 and ADR-0003 invariants:
 """
 
 import ast
-import importlib
 import subprocess
 import sys
 from pathlib import Path
@@ -16,10 +15,8 @@ import pytest
 
 from agent_dashboard import (
     DashboardActionRef,
-    DashboardHighlight,
     DashboardScreen,
 )
-
 
 # --- hashability ---
 
@@ -174,8 +171,8 @@ def test_renderer_stdlib_only():
 def test_extension_pattern_to_library_produces_correct_action_ref():
     # ADR-0003: consumer defines own dataclass with extra fields and converts
     # to DashboardActionRef via .to_library() at the rendering boundary.
-    from dataclasses import dataclass as dc
     from collections.abc import Mapping
+    from dataclasses import dataclass as dc
     from typing import Any
 
     @dc(frozen=True)

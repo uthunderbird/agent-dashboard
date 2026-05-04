@@ -119,3 +119,39 @@ def test_none_metadata_round_trip():
     )
     result = screen_from_dict(screen_to_dict(screen))
     assert result.screen_actions[0].metadata is None
+
+
+def test_highlight_metadata_round_trip():
+    screen = DashboardScreen(
+        dashboard_id="d",
+        screen_id="s",
+        breadcrumb=(),
+        item_count=0,
+        body_lines=(),
+        highlights=(
+            DashboardHighlight(
+                highlight_id="h1",
+                title="T",
+                summary="S",
+                severity="low",
+                metadata={"source": "db", "count": 3},
+            ),
+        ),
+    )
+    result = screen_from_dict(screen_to_dict(screen))
+    assert result.highlights[0].metadata == {"source": "db", "count": 3}
+
+
+def test_highlight_metadata_none_round_trip():
+    screen = DashboardScreen(
+        dashboard_id="d",
+        screen_id="s",
+        breadcrumb=(),
+        item_count=0,
+        body_lines=(),
+        highlights=(
+            DashboardHighlight(highlight_id="h1", title="T", summary="S", severity="low"),
+        ),
+    )
+    result = screen_from_dict(screen_to_dict(screen))
+    assert result.highlights[0].metadata is None

@@ -1,6 +1,5 @@
 from agent_dashboard.actions import ActionSpec
 
-
 REPLY = ActionSpec(
     action_id="reply",
     label="Reply",

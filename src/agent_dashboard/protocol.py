@@ -18,6 +18,7 @@ class DashboardHighlight:
     status: str = "active"
     source_ref: str | None = None
     suggested_next_step: str | None = None
+    metadata: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True)

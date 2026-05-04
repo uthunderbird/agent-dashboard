@@ -45,10 +45,13 @@ def _highlight_to_dict(h: DashboardHighlight) -> dict[str, Any]:
         "status": h.status,
         "source_ref": h.source_ref,
         "suggested_next_step": h.suggested_next_step,
+        "metadata": dict(h.metadata) if h.metadata is not None else None,
     }
 
 
 def _highlight_from_dict(data: dict[str, Any]) -> DashboardHighlight:
+    raw_meta = data.get("metadata")
+    metadata: Mapping[str, Any] | None = raw_meta if raw_meta is not None else None
     return DashboardHighlight(
         highlight_id=data["highlight_id"],
         title=data["title"],
@@ -57,6 +60,7 @@ def _highlight_from_dict(data: dict[str, Any]) -> DashboardHighlight:
         status=data.get("status", "active"),
         source_ref=data.get("source_ref"),
         suggested_next_step=data.get("suggested_next_step"),
+        metadata=metadata,
     )
 
 

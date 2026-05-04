@@ -30,18 +30,23 @@ load-bearing in conversation; remove entries that fall out of use.
   metadata (`target_id`, `target_display_name`). The library never executes
   actions; it only renders them.
 
-- **Screen action** — an action reference with local, state-only effect. No
-  external side effects. Examples: marking a highlight explored, collapsing a
-  section. Collected in `DashboardScreen.screen_actions`.
+- **Screen action** — an action reference rendered into the plain-text prompt
+  by `render_screen()`. The agent reads it as part of the `Screen actions:`
+  section. Intended for actions the agent selects by naming them in its
+  structured response. Collected in `DashboardScreen.screen_actions`.
 
-- **Tool call** — an action reference that triggers external execution and may
-  have side effects. May require approval before execution. Collected in
-  `DashboardScreen.tool_calls`. Semantically distinct from screen actions even
-  though both use `DashboardActionRef` as the carrier type.
+- **Tool call** — an action reference *not* rendered into the plain-text
+  prompt. It is passed out-of-band by the caller to the model API as a native
+  function/tool definition (e.g. OpenAI `tools=`, Anthropic `tools=`). Both
+  lists use `DashboardActionRef` as the carrier type; the split is about
+  rendering channel, not severity. Collected in `DashboardScreen.tool_calls`.
 
-- **View state** — `"collapsed"` or `"expanded"`. Controls rendering density.
-  `collapsed` surfaces highlights only; `expanded` includes full body lines.
-  The renderer respects this field.
+- **View state** — `"collapsed"` or `"expanded"`. Appears in the rendered
+  output as `View state: collapsed`. The library currently only produces
+  `"collapsed"` from internal defaults; `"expanded"` is a reserved value that
+  callers may set explicitly. The renderer emits the field value as-is — the
+  interpretation (e.g. showing or hiding body lines) is left to future
+  renderer behaviour or the consuming application.
 
 - **Body lines** — `DashboardScreen.body_lines: tuple[str, ...]`. Plain-text
   lines produced by the dashboard builder. The library treats them as opaque

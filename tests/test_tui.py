@@ -23,8 +23,6 @@ async def test_live_tui_context_survives_empty_hub():
 
 
 async def test_live_tui_context_receives_multiple_screens():
-    received_count = 0
-
     async with ScreenHub() as hub:
         async with live_tui_context(hub):
             for i in range(3):
