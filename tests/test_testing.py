@@ -1,7 +1,16 @@
 import asyncio
 
 from agent_dashboard import DashboardActionRef, DashboardHighlight, DashboardScreen
-from agent_dashboard.testing import ScreenChangeSummary, hub_context, make_screen, screen_diff
+from agent_dashboard.testing import (
+    ScreenChangeSummary,
+    assert_action_ids,
+    assert_body_contains,
+    assert_highlight_ids,
+    assert_render_fits_budget,
+    hub_context,
+    make_screen,
+    screen_diff,
+)
 
 # --- make_screen ---
 
@@ -30,9 +39,7 @@ def test_make_screen_override_collections():
 
 
 def _highlight(n: int) -> DashboardHighlight:
-    return DashboardHighlight(
-        highlight_id=f"h{n}", title=f"T{n}", summary=f"S{n}", severity="low"
-    )
+    return DashboardHighlight(highlight_id=f"h{n}", title=f"T{n}", summary=f"S{n}", severity="low")
 
 
 def _action(n: int) -> DashboardActionRef:
@@ -107,6 +114,59 @@ def test_screen_diff_body_lines_not_changed():
     assert screen_diff(s, s).body_lines_changed is False
 
 
+# --- assertions ---
+
+
+def test_assert_highlight_ids_passes_for_expected_order():
+    screen = make_screen(highlights=(_highlight(1), _highlight(2)))
+    assert_highlight_ids(screen, ("h1", "h2"))
+
+
+def test_assert_highlight_ids_failure_message():
+    import pytest
+
+    screen = make_screen(highlights=(_highlight(1),))
+    with pytest.raises(AssertionError, match="highlight ids differ"):
+        assert_highlight_ids(screen, ("missing",))
+
+
+def test_assert_action_ids_defaults_to_both_channels():
+    screen = make_screen(screen_actions=(_action(1),), tool_calls=(_action(2),))
+    assert_action_ids(screen, ("a1", "a2"))
+
+
+def test_assert_action_ids_can_check_one_channel():
+    screen = make_screen(screen_actions=(_action(1),), tool_calls=(_action(2),))
+    assert_action_ids(screen, ("a2",), channel="tool_calls")
+
+
+def test_assert_body_contains_multiple_needles():
+    screen = make_screen(body_lines=("Store #12", "Phase: inspection"))
+    assert_body_contains(screen, "Store #12", "inspection")
+
+
+def test_assert_body_contains_failure_message():
+    import pytest
+
+    screen = make_screen(body_lines=("Store #12",))
+    with pytest.raises(AssertionError, match="body_lines missing"):
+        assert_body_contains(screen, "Phase")
+
+
+def test_assert_render_fits_budget_returns_rendered_text():
+    screen = make_screen(body_lines=("short",))
+    rendered = assert_render_fits_budget(screen, token_budget=64)
+    assert "short" in rendered
+
+
+def test_assert_render_fits_budget_fails_on_truncation():
+    import pytest
+
+    screen = make_screen(body_lines=("x" * 500,))
+    with pytest.raises(AssertionError, match="truncated output"):
+        assert_render_fits_budget(screen, token_budget=10)
+
+
 # --- hub_context ---
 
 
@@ -152,5 +212,6 @@ async def test_hub_context_closes_on_exit():
         pass
     # publish after close should raise
     import pytest
+
     with pytest.raises(RuntimeError, match="closed"):
         hub.publish(make_screen())

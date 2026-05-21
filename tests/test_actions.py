@@ -44,6 +44,7 @@ def test_for_target_different_targets_same_spec():
 
 def test_spec_is_immutable():
     import pytest
+
     with pytest.raises((AttributeError, TypeError)):
         REPLY.action_id = "other"  # type: ignore[misc]
 

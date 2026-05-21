@@ -2,10 +2,10 @@
 # pip install promptstrings
 from __future__ import annotations
 
+from promptstrings import PromptContext, promptstring
+
 from agent_dashboard.protocol import DashboardScreen
 from agent_dashboard.renderer import render_screen
-
-from promptstrings import PromptContext, promptstring
 
 
 @promptstring

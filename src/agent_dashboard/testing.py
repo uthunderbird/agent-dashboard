@@ -7,6 +7,9 @@ from typing import Any, Literal
 
 from agent_dashboard.hub import ScreenHub
 from agent_dashboard.protocol import DashboardActionRef, DashboardHighlight, DashboardScreen
+from agent_dashboard.renderer import render_screen
+
+_TRUNCATION_MARKER = "... [truncated]"
 
 
 def make_screen(**overrides: Any) -> DashboardScreen:
@@ -45,6 +48,60 @@ def screen_diff(old: DashboardScreen, new: DashboardScreen) -> ScreenChangeSumma
         view_state_changed=old.view_state != new.view_state,
         body_lines_changed=old.body_lines != new.body_lines,
     )
+
+
+def assert_highlight_ids(screen: DashboardScreen, expected: Sequence[str]) -> None:
+    """Assert the screen exposes exactly the expected highlight ids in order."""
+
+    actual = tuple(h.highlight_id for h in screen.highlights)
+    expected_tuple = tuple(expected)
+    assert actual == expected_tuple, (
+        f"highlight ids differ: expected {expected_tuple!r}, got {actual!r}"
+    )
+
+
+def assert_action_ids(
+    screen: DashboardScreen,
+    expected: Sequence[str],
+    *,
+    channel: Literal["screen_actions", "tool_calls", "all"] = "all",
+) -> None:
+    """Assert action ids for one action channel or both channels together."""
+
+    if channel == "screen_actions":
+        actions = screen.screen_actions
+    elif channel == "tool_calls":
+        actions = screen.tool_calls
+    else:
+        actions = (*screen.screen_actions, *screen.tool_calls)
+
+    actual = tuple(a.action_id for a in actions)
+    expected_tuple = tuple(expected)
+    assert actual == expected_tuple, (
+        f"{channel} action ids differ: expected {expected_tuple!r}, got {actual!r}"
+    )
+
+
+def assert_body_contains(screen: DashboardScreen, *needles: str) -> None:
+    """Assert every needle appears somewhere in the screen body lines."""
+
+    body = "\n".join(screen.body_lines)
+    missing = tuple(needle for needle in needles if needle not in body)
+    assert not missing, f"body_lines missing {missing!r}; body was {body!r}"
+
+
+def assert_render_fits_budget(screen: DashboardScreen, *, token_budget: int) -> str:
+    """Render a screen and assert the output was not truncated.
+
+    The rendered string is returned so tests can keep making ordinary substring
+    assertions without calling ``render_screen`` a second time.
+    """
+
+    rendered = render_screen(screen, token_budget=token_budget)
+    assert not rendered.endswith(_TRUNCATION_MARKER), (
+        f"render_screen truncated output at token_budget={token_budget}"
+    )
+    return rendered
 
 
 @asynccontextmanager

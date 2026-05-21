@@ -10,15 +10,25 @@ import ast
 import subprocess
 import sys
 from pathlib import Path
+from typing import get_type_hints
 
 import pytest
 
 from agent_dashboard import (
     DashboardActionRef,
+    DashboardHighlight,
     DashboardScreen,
+    SeverityLevel,
+    StatusValue,
 )
 
 # --- hashability ---
+
+
+def test_highlight_severity_and_status_are_literal_typed():
+    hints = get_type_hints(DashboardHighlight)
+    assert hints["severity"] == SeverityLevel
+    assert hints["status"] == StatusValue
 
 
 def test_action_ref_hashable_without_metadata():
@@ -160,7 +170,9 @@ def test_renderer_stdlib_only():
     # agent_dashboard is first-party (sibling module), not third-party
     first_party = {"agent_dashboard"}
     third_party = [
-        m for m in imports if m and m not in stdlib_names and m not in first_party and m != "__future__"
+        m
+        for m in imports
+        if m and m not in stdlib_names and m not in first_party and m != "__future__"
     ]
     assert not third_party, f"renderer.py has non-stdlib imports: {third_party}"
 
@@ -239,11 +251,16 @@ def test_extension_pattern_end_to_end_render():
 
     from agent_dashboard import DashboardScreen, render_screen
 
-    ref = ConsumerActionRef(action_id="send", label="Send", kind="tool",
-                            requires_approval=True, internal_id=99)
+    ref = ConsumerActionRef(
+        action_id="send", label="Send", kind="tool", requires_approval=True, internal_id=99
+    )
     screen = DashboardScreen(
-        dashboard_id="d", screen_id="s", breadcrumb=("Root",),
-        item_count=0, body_lines=(), tool_calls=(ref.to_library(),),
+        dashboard_id="d",
+        screen_id="s",
+        breadcrumb=("Root",),
+        item_count=0,
+        body_lines=(),
+        tool_calls=(ref.to_library(),),
     )
     out = render_screen(screen)
     assert "send: Send" in out
@@ -258,8 +275,12 @@ def test_direct_construction_without_extension_pattern():
 
     ref = DashboardActionRef(action_id="snooze", label="Snooze", kind="local")
     screen = DashboardScreen(
-        dashboard_id="d", screen_id="s", breadcrumb=("Root",),
-        item_count=0, body_lines=(), screen_actions=(ref,),
+        dashboard_id="d",
+        screen_id="s",
+        breadcrumb=("Root",),
+        item_count=0,
+        body_lines=(),
+        screen_actions=(ref,),
     )
     out = render_screen(screen)
     assert "snooze: Snooze" in out

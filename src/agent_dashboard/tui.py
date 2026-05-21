@@ -23,9 +23,7 @@ async def live_tui(hub: ScreenHub, *, token_budget: int = 4000) -> None:
 
 
 @asynccontextmanager
-async def live_tui_context(
-    hub: ScreenHub, *, token_budget: int = 4000
-) -> AsyncGenerator[None]:
+async def live_tui_context(hub: ScreenHub, *, token_budget: int = 4000) -> AsyncGenerator[None]:
     task = asyncio.create_task(live_tui(hub, token_budget=token_budget))
     try:
         yield
@@ -33,5 +31,5 @@ async def live_tui_context(
         task.cancel()
         try:
             await task
-        except (asyncio.CancelledError, StopAsyncIteration):
+        except asyncio.CancelledError, StopAsyncIteration:
             pass

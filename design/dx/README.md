@@ -20,9 +20,8 @@ render.
 
 ## Index
 
-<!-- Add entries as docs land. -->
-
-_No DX docs yet._
+- [Authoring cookbook](authoring-cookbook.md) — practical screen-building,
+  metadata, testing, and preview patterns.
 
 ## Out of scope
 

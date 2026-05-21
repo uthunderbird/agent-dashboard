@@ -14,8 +14,8 @@ class DashboardHighlight:
     highlight_id: str
     title: str
     summary: str
-    severity: str
-    status: str = "active"
+    severity: SeverityLevel
+    status: StatusValue = "active"
     source_ref: str | None = None
     suggested_next_step: str | None = None
     metadata: Mapping[str, Any] | None = None

@@ -90,7 +90,7 @@ All names below are importable directly from `agent_dashboard`.
 | `render_screen(screen, *, token_budget)` | Pure function → token-bounded plain-text string |
 | `screen_to_dict(screen)` | Serialize to a plain dict (tuple fields → lists) |
 | `screen_from_dict(data)` | Deserialize from dict; ignores unknown fields |
-| `SeverityLevel`, `StatusValue`, `ViewState` | Literal type aliases — document convention, no enforcement |
+| `SeverityLevel`, `StatusValue`, `ViewState` | Literal type aliases for IDE/type-checker feedback; Python does not enforce them at runtime |
 
 ### Two action lists
 
@@ -132,13 +132,20 @@ to keep the base import free of asyncio.
 
 | Module | What it provides | Import |
 |--------|-----------------|--------|
-| `agent_dashboard.testing` | `make_screen()`, `screen_diff()`, `hub_context()` — test helpers with no pytest coupling | explicit |
+| `agent_dashboard.testing` | `make_screen()`, `screen_diff()`, assertion helpers, `hub_context()` — test helpers with no pytest coupling | explicit |
 | `agent_dashboard.tui` | `live_tui(hub)`, `live_tui_context(hub)` — read-only live terminal display via `rich` | `pip install agent-dashboard[tui]` |
 
 ### Testing example
 
 ```python
-from agent_dashboard.testing import make_screen, screen_diff, hub_context
+from agent_dashboard.testing import (
+    assert_body_contains,
+    assert_highlight_ids,
+    assert_render_fits_budget,
+    make_screen,
+    screen_diff,
+    hub_context,
+)
 
 # Minimal valid screen with sensible defaults — override any field:
 screen = make_screen(dashboard_id="inbox", item_count=5)
@@ -147,11 +154,38 @@ screen = make_screen(dashboard_id="inbox", item_count=5)
 summary = screen_diff(old_screen, new_screen)
 assert summary.item_count_delta == 2
 
+# Author-facing assertions with useful failure messages:
+assert_highlight_ids(screen, ("overdue-invoice", "missing-owner"))
+assert_body_contains(screen, "Store #1610", "Phase: inspection")
+rendered = assert_render_fits_budget(screen, token_budget=512)
+
 # Hub fixture for async tests (works with pytest-asyncio asyncio_mode="auto"):
 async with hub_context(initial_screens=[(screen, "turn-1")]) as hub:
     async for s, group_id in hub.subscribe_from_latest():
         ...
 ```
+
+### Authoring patterns
+
+Keep text and structured data separate. `title`, `summary`, and `body_lines`
+are what the agent reads; avoid parsing those fields later to recover IDs,
+colors, indexes, or routing hints. Put stable machine-readable data in ids or
+`metadata`:
+
+```python
+DashboardHighlight(
+    highlight_id="figure-3",
+    title="Figure 3",
+    summary="triangle · red",
+    severity="high",
+    metadata={"shape": "triangle", "color": "red", "position": 3},
+)
+```
+
+If a consumer-specific UI needs more state than `DashboardScreen` carries,
+keep that adapter in the consuming application. `agent-dashboard` intentionally
+models the shared projection boundary; richer HTML, persistence, transport,
+and tool execution stay outside the library.
 
 ## Design
 
@@ -161,3 +195,5 @@ consuming application.
 
 Full design documentation — boundary decisions, proposals, and glossary — lives
 in [`design/`](design/).
+
+Release history lives in [`CHANGELOG.md`](CHANGELOG.md).

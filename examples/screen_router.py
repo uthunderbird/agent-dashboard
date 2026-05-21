@@ -12,12 +12,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from agent_dashboard import (
     ActionSpec,
-    DashboardActionRef,
     DashboardHighlight,
     DashboardScreen,
     render_screen,
@@ -26,6 +26,7 @@ from agent_dashboard import (
 # ---------------------------------------------------------------------------
 # Domain model (yours — not agent-dashboard's)
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class TodoItem:
@@ -45,15 +46,16 @@ class AppState:
 # Action specs (defined once, reused across screens)
 # ---------------------------------------------------------------------------
 
-SELECT   = ActionSpec(action_id="select",   label="Open",          kind="action")
-COMPLETE = ActionSpec(action_id="complete", label="Mark complete",  kind="action")
-DELETE   = ActionSpec(action_id="delete",   label="Delete",         kind="action", requires_approval=True)
-BACK     = ActionSpec(action_id="back",     label="Back to list",   kind="action")
+SELECT = ActionSpec(action_id="select", label="Open", kind="action")
+COMPLETE = ActionSpec(action_id="complete", label="Mark complete", kind="action")
+DELETE = ActionSpec(action_id="delete", label="Delete", kind="action", requires_approval=True)
+BACK = ActionSpec(action_id="back", label="Back to list", kind="action")
 
 
 # ---------------------------------------------------------------------------
 # Screen builders
 # ---------------------------------------------------------------------------
+
 
 def build_list_screen(state: AppState) -> DashboardScreen:
     pending = [t for t in state.items if not t.done]
@@ -74,14 +76,12 @@ def build_list_screen(state: AppState) -> DashboardScreen:
         breadcrumb=("Todo",),
         item_count=len(pending),
         body_lines=tuple(
-            f'[{"x" if t.done else " "}] [{t.priority}] {t.title}'
-            for t in state.items
+            f"[{'x' if t.done else ' '}] [{t.priority}] {t.title}" for t in state.items
         ),
         screen_instructions="Select a task to act on, or complete the highest-priority item.",
         highlights=highlights,
         screen_actions=tuple(
-            SELECT.for_target(source_id="todo", item_id=t.id, display_name=t.title)
-            for t in pending
+            SELECT.for_target(source_id="todo", item_id=t.id, display_name=t.title) for t in pending
         ),
     )
 
@@ -104,7 +104,7 @@ def build_detail_screen(state: AppState) -> DashboardScreen:
         screen_instructions="Complete or delete this task, or go back.",
         screen_actions=(
             COMPLETE.for_target(source_id="todo", item_id=item.id, display_name=item.title),
-            DELETE.for_target(source_id="todo",   item_id=item.id, display_name=item.title),
+            DELETE.for_target(source_id="todo", item_id=item.id, display_name=item.title),
             BACK.for_target(source_id="todo"),
         ),
     )
@@ -116,7 +116,7 @@ def build_detail_screen(state: AppState) -> DashboardScreen:
 
 # Maps screen_id → builder.  Add screens here as your app grows.
 SCREENS: dict[str, Callable[[AppState], DashboardScreen]] = {
-    "list":   build_list_screen,
+    "list": build_list_screen,
     "detail": build_detail_screen,
 }
 
@@ -124,6 +124,7 @@ SCREENS: dict[str, Callable[[AppState], DashboardScreen]] = {
 @dataclass
 class AgentAction:
     """Parsed agent response."""
+
     action_id: str
     target_item_id: str | None
 
@@ -175,6 +176,7 @@ def apply_action(action: AgentAction, state: AppState) -> tuple[AppState, str]:
 
 _stub_turn = 0
 
+
 def call_llm(prompt: str) -> dict[str, Any]:
     """Stub: replace with your LLM call returning a structured response dict.
 
@@ -183,7 +185,7 @@ def call_llm(prompt: str) -> dict[str, Any]:
     """
     global _stub_turn
     responses = [
-        {"action_id": "select",   "target_item_id": "t1"},
+        {"action_id": "select", "target_item_id": "t1"},
         {"action_id": "complete", "target_item_id": "t1"},
         {"action_id": "complete", "target_item_id": "t2"},
         {"action_id": "complete", "target_item_id": "t3"},
@@ -218,8 +220,7 @@ def run(state: AppState, *, start_screen: str = "list", max_turns: int = 10) -> 
 
         # Validate: is this action available on the current screen?
         available = {
-            (a.action_id, a.target_item_id)
-            for a in (*screen.screen_actions, *screen.tool_calls)
+            (a.action_id, a.target_item_id) for a in (*screen.screen_actions, *screen.tool_calls)
         }
         if (action.action_id, action.target_item_id) not in available:
             print(f"[router] Agent chose unavailable action {action!r} — retrying")
@@ -238,9 +239,11 @@ def run(state: AppState, *, start_screen: str = "list", max_turns: int = 10) -> 
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    state = AppState(items=[
-        TodoItem("t1", "Publish agent-dashboard to PyPI", False, "high"),
-        TodoItem("t2", "Write integration tests",         False, "medium"),
-        TodoItem("t3", "Buy groceries",                   False, "low"),
-    ])
+    state = AppState(
+        items=[
+            TodoItem("t1", "Publish agent-dashboard to PyPI", False, "high"),
+            TodoItem("t2", "Write integration tests", False, "medium"),
+            TodoItem("t3", "Buy groceries", False, "low"),
+        ]
+    )
     run(state, max_turns=5)

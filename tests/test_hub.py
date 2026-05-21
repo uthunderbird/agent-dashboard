@@ -245,6 +245,7 @@ async def test_subscribe_from_latest_then_receives_new_events():
 
 async def test_drop_newest_increments_dropped_count():
     async with ScreenHub(maxsize=1, overflow="drop_newest") as hub:
+
         async def collect() -> None:
             async for _ in hub.subscribe():
                 await asyncio.sleep(10)  # never drains
@@ -260,7 +261,7 @@ async def test_drop_newest_increments_dropped_count():
         task.cancel()
         try:
             await task
-        except (asyncio.CancelledError, StopAsyncIteration):
+        except asyncio.CancelledError, StopAsyncIteration:
             pass
 
 
@@ -313,4 +314,5 @@ async def test_aclose_terminates_subscriber():
 async def test_hub_not_imported_from_init():
     # ScreenHub must NOT be re-exported from agent_dashboard.__init__
     import agent_dashboard
+
     assert not hasattr(agent_dashboard, "ScreenHub")

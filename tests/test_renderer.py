@@ -91,7 +91,9 @@ def test_highlights_rendered():
 
 def test_highlight_non_default_status_rendered():
     # Renderer uses h.status verbatim; non-default value must appear in output.
-    h = DashboardHighlight(highlight_id="h1", title="T", summary="S", severity="high", status="resolved")
+    h = DashboardHighlight(
+        highlight_id="h1", title="T", summary="S", severity="high", status="resolved"
+    )
     assert "[high/resolved]" in render_screen(_minimal_screen(highlights=(h,)))
 
 
@@ -199,9 +201,7 @@ def test_view_state_does_not_change_body_content():
     # Only the View state line differs
     collapsed_lines = collapsed.splitlines()
     expanded_lines = expanded.splitlines()
-    diffs = [
-        (a, b) for a, b in zip(collapsed_lines, expanded_lines) if a != b
-    ]
+    diffs = [(a, b) for a, b in zip(collapsed_lines, expanded_lines) if a != b]
     assert len(diffs) == 1
     assert diffs[0] == ("View state: collapsed", "View state: expanded")
 
@@ -211,7 +211,9 @@ def test_view_state_does_not_change_body_content():
 
 def test_action_requires_approval_marker():
     # R-12: marker appears exactly once, on the approved action's line only.
-    approved = DashboardActionRef(action_id="delete", label="Delete", kind="action", requires_approval=True)
+    approved = DashboardActionRef(
+        action_id="delete", label="Delete", kind="action", requires_approval=True
+    )
     plain = DashboardActionRef(action_id="view", label="View", kind="action")
     out = render_screen(_minimal_screen(screen_actions=(approved, plain)))
     assert out.count("[requires approval]") == 1
@@ -229,9 +231,14 @@ def test_action_requires_approval_position_relative_to_target_and_description():
     # external-dev-api.md line 167: [requires approval] appears after target
     # suffix and before description suffix.
     a = DashboardActionRef(
-        action_id="reply", label="Reply", kind="send",
-        target_source_id="inbox", target_item_id="msg-1", target_display_name="Message",
-        requires_approval=True, description="Send a reply.",
+        action_id="reply",
+        label="Reply",
+        kind="send",
+        target_source_id="inbox",
+        target_item_id="msg-1",
+        target_display_name="Message",
+        requires_approval=True,
+        description="Send a reply.",
     )
     out = render_screen(_minimal_screen(screen_actions=(a,)))
     line = next(ln for ln in out.splitlines() if "reply:" in ln)
@@ -244,9 +251,14 @@ def test_action_requires_approval_position_relative_to_target_and_description():
 def test_rendering_symmetry_screen_actions_vs_tool_calls():
     # P-8: screen_actions and tool_calls use identical formatting logic.
     a = DashboardActionRef(
-        action_id="send", label="Send", kind="tool",
-        target_source_id="src", target_item_id="itm", target_display_name="Item",
-        requires_approval=True, description="Send it.",
+        action_id="send",
+        label="Send",
+        kind="tool",
+        target_source_id="src",
+        target_item_id="itm",
+        target_display_name="Item",
+        requires_approval=True,
+        description="Send it.",
     )
     out_sa = render_screen(_minimal_screen(screen_actions=(a,)))
     out_tc = render_screen(_minimal_screen(tool_calls=(a,)))
